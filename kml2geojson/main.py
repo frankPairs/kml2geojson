@@ -587,3 +587,30 @@ def convert(kml_path, output_dir, separate_folders=False,
         path = output_dir/style_filename
         with path.open('w') as tgt:
             json.dump(style_dict, tgt)
+
+def convert_in_memory(kml_path):
+    """
+    Given a path to a KML file, convert it to one or several GeoJSON FeatureCollection.
+
+    It returns a GeoJSON string when the kml file contains only one layer.
+    It returns a list of GeoJSON strings when the kml file contains multiple layers.
+    """
+    geojson = []
+
+    # Create absolute paths
+    kml_path = Path(kml_path).resolve()
+
+    # Parse KML
+    with kml_path.open(encoding='utf-8', errors='ignore') as src:
+        kml_str = src.read()
+    root = md.parseString(kml_str)
+
+    # Build GeoJSON layers
+    layers = [build_feature_collection(root)]
+
+    # Write layers to files
+    for i in range(len(layers)):
+        geojson.append(json.dumps(layers[i]))
+
+    return geojson[0] if len(geojson) == 1 else geojson
+

@@ -2,6 +2,7 @@ from copy import copy
 import os, shutil
 import xml.dom.minidom as md 
 import json
+import re
 
 from .context import kml2geojson, DATA_DIR
 from kml2geojson import *
@@ -121,3 +122,23 @@ def test_main():
         assert get == expect
 
     rm_paths(out_path)
+
+
+def test_convert_in_memory():
+    root = DATA_DIR
+    stems = set(p.stem for p in root.glob('*.kml')) & \
+            set(p.stem for p in root.glob('*.geojson'))
+
+    for s in stems:
+        k_path = root / (s + '.kml')
+        g_path = root / (s + '.geojson')
+
+        geojson = convert_in_memory(k_path)
+
+        with open(g_path) as file:
+            expect = file.read()
+
+        geojson_dict = json.loads(geojson)
+        expect_dict = json.loads(expect)
+
+        assert sorted(geojson_dict) == sorted(expect_dict)
